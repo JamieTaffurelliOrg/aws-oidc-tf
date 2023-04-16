@@ -1,63 +1,55 @@
-variable "force_detach_policies" {
-  default     = false
-  description = "Flag to force detachment of policies attached to the IAM role."
-  type        = bool
+variable "oidc_provider_url" {
+  type        = string
+  description = "OIDC token provider url"
 }
 
-variable "github_repositories" {
-  description = "List of GitHub organization/repository names authorized to assume the role."
+variable "oidc_client_ids" {
   type        = list(string)
-
-  validation {
-    // Ensures each element of github_repositories list matches the
-    // organization/repository format used by GitHub.
-    condition = length([
-      for repo in var.github_repositories : 1
-      if length(regexall("^[A-Za-z0-9_.-]+?/([A-Za-z0-9_.:/-]+[*]?|\\*)$", repo)) > 0
-    ]) == length(var.github_repositories)
-    error_message = "Repositories must be specified in the organization/repository format."
-  }
+  description = "IDs of authenticated clients"
 }
 
-variable "iam_role_name" {
-  default     = "github"
-  description = "Name of the IAM role to be created. This will be assumable by GitHub."
-  type        = string
-}
-
-variable "iam_role_path" {
-  default     = "/"
-  description = "Path under which to create IAM role."
-  type        = string
-}
-
-variable "iam_role_permissions_boundary" {
-  default     = ""
-  description = "ARN of the permissions boundary to be used by the IAM role."
-  type        = string
-}
-
-variable "iam_role_policy_arns" {
-  default     = []
-  description = "List of IAM policy ARNs to attach to the IAM role."
+variable "thumbprint_urls" {
   type        = list(string)
+  description = "URLs for certificates (typically ends in .well-known/openid-configuration)"
 }
 
-variable "iam_role_inline_policies" {
-  default     = {}
-  description = "Inline policies map with policy name as key and json as value."
-  type        = map(string)
+variable "policy_documents" {
+  type = map(object(
+    {
+      actions = optional(list(string), ["sts:AssumeRoleWithWebIdentity"])
+      effect  = optional(string, "Allow")
+      conditions = map(object(
+        {
+          values   = list(string)
+          test     = string
+          variable = string
+        }
+      ))
+    }
+  ))
+  description = "Conditions for authenticating to a role"
 }
 
-variable "max_session_duration" {
-  default     = 3600
-  description = "Maximum session duration in seconds."
-  type        = number
-
-  validation {
-    condition     = var.max_session_duration >= 3600 && var.max_session_duration <= 43200
-    error_message = "Maximum session duration must be between 3600 and 43200 seconds."
-  }
+variable "roles" {
+  type = list(object(
+    {
+      name                      = string
+      description               = string
+      policy_document_reference = string
+      force_detach_policies     = optional(bool, false)
+      max_session_duration      = optional(number, 3600)
+      path                      = string
+      permissions_boundary      = string
+      inline_policies = optional(list(object(
+        {
+          name  = string
+          value = string
+        }
+      )), [])
+      policy_arns = list(string)
+    }
+  ))
+  description = "Conditions for authenticating to a role"
 }
 
 variable "tags" {

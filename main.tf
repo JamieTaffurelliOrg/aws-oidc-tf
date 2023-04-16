@@ -1,38 +1,36 @@
-resource "aws_iam_role" "github" {
-  assume_role_policy    = data.aws_iam_policy_document.assume_role.json
-  description           = "Role assumed by the GitHub OIDC provider."
-  force_detach_policies = var.force_detach_policies
-  max_session_duration  = var.max_session_duration
-  name                  = var.iam_role_name
-  path                  = var.iam_role_path
-  permissions_boundary  = var.iam_role_permissions_boundary
-  tags                  = var.tags
+resource "aws_iam_role" "roles" {
+  for_each              = { for k in var.roles : k.name => k }
+  name                  = each.key
+  assume_role_policy    = data.aws_iam_policy_document.assume_role[each.value["policy_document_reference"]].json
+  description           = each.value["description"]
+  force_detach_policies = each.value["force_detach_policies"]
+  max_session_duration  = each.value["max_session_duration"]
+  path                  = each.value["path"]
+  permissions_boundary  = each.value["permissions_boundary"]
 
   dynamic "inline_policy" {
-    for_each = var.iam_role_inline_policies
+    for_each = { for k in each.value["inline_policies"] : k.name => k if k != null }
 
     content {
       name   = inline_policy.key
       policy = inline_policy.value
     }
   }
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "policies" {
-  for_each = toset(var.iam_role_policy_arns)
+  for_each = { for k in local.policy_attachments : "${k.role}-${k.policy_arn}" => k }
 
-  policy_arn = each.key
-  role       = aws_iam_role.github.id
+  policy_arn = each.value["policy_arn"]
+  role       = each.value["role"]
 }
 
-resource "aws_iam_openid_connect_provider" "github" {
-  client_id_list = concat(
-    [for org in local.github_organizations : "https://github.com/${org}"],
-    ["sts.amazonaws.com"]
-  )
-
-  url             = "https://token.actions.githubusercontent.com"
-  thumbprint_list = [data.tls_certificate.github.certificates[0].sha1_fingerprint]
+resource "aws_iam_openid_connect_provider" "oidc_provider" {
+  url             = var.oidc_provider_url
+  client_id_list  = var.oidc_client_ids
+  thumbprint_list = data.tls_certificate.certificates[*].certificates[0].sha1_fingerprint
 
   tags = var.tags
 }

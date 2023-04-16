@@ -1,26 +1,22 @@
 data "aws_iam_policy_document" "assume_role" {
+  for_each = var.policy_documents != null ? var.policy_documents : {}
 
   statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
+    actions = each.value["actions"]
+    effect  = each.value["effect"]
 
-    condition {
-      test = "StringLike"
-      values = [
-        for repo in var.github_repositories :
-        "repo:%{if length(regexall(":+", repo)) > 0}${repo}%{else}${repo}:*%{endif}"
-      ]
-      variable = "token.actions.githubusercontent.com:sub"
-    }
+    dynamic "condition" {
+      for_each = each.value["conditions"]
 
-    condition {
-      test     = "StringEquals"
-      values   = ["sts.amazonaws.com"]
-      variable = "token.actions.githubusercontent.com:aud"
+      content {
+        test     = condition.value["test"]
+        values   = condition.value["values"]
+        variable = condition.value["variable"]
+      }
     }
 
     principals {
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
+      identifiers = [aws_iam_openid_connect_provider.oidc_provider.arn]
       type        = "Federated"
     }
   }
@@ -28,6 +24,7 @@ data "aws_iam_policy_document" "assume_role" {
   version = "2012-10-17"
 }
 
-data "tls_certificate" "github" {
-  url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
+data "tls_certificate" "certificates" {
+  count = length(var.thumbprint_urls)
+  url   = var.thumbprint_urls[count.index]
 }
