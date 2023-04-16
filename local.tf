@@ -4,6 +4,7 @@ locals {
       for policy_arn in role.policy_arns : {
         role       = aws_iam_role.roles[role.name].id
         policy_arn = policy_arn
+        role_name  = role.name
       }
   ]]))
 }
