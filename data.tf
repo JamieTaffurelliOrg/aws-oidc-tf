@@ -1,5 +1,5 @@
 data "aws_iam_policy_document" "assume_role" {
-  for_each = var.policy_documents != null ? var.policy_documents : {}
+  for_each = var.policy_documents
 
   statement {
     actions = each.value["actions"]
