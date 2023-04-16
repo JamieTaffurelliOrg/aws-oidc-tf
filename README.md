@@ -23,25 +23,22 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_openid_connect_provider.github](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
-| [aws_iam_role.github](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_openid_connect_provider.oidc_provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
+| [aws_iam_role.roles](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.policies](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [tls_certificate.github](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
+| [tls_certificate.certificates](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/data-sources/certificate) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_force_detach_policies"></a> [force\_detach\_policies](#input\_force\_detach\_policies) | Flag to force detachment of policies attached to the IAM role. | `bool` | `false` | no |
-| <a name="input_github_repositories"></a> [github\_repositories](#input\_github\_repositories) | List of GitHub organization/repository names authorized to assume the role. | `list(string)` | n/a | yes |
-| <a name="input_iam_role_inline_policies"></a> [iam\_role\_inline\_policies](#input\_iam\_role\_inline\_policies) | Inline policies map with policy name as key and json as value. | `map(string)` | `{}` | no |
-| <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | Name of the IAM role to be created. This will be assumable by GitHub. | `string` | `"github"` | no |
-| <a name="input_iam_role_path"></a> [iam\_role\_path](#input\_iam\_role\_path) | Path under which to create IAM role. | `string` | `"/"` | no |
-| <a name="input_iam_role_permissions_boundary"></a> [iam\_role\_permissions\_boundary](#input\_iam\_role\_permissions\_boundary) | ARN of the permissions boundary to be used by the IAM role. | `string` | `""` | no |
-| <a name="input_iam_role_policy_arns"></a> [iam\_role\_policy\_arns](#input\_iam\_role\_policy\_arns) | List of IAM policy ARNs to attach to the IAM role. | `list(string)` | `[]` | no |
-| <a name="input_max_session_duration"></a> [max\_session\_duration](#input\_max\_session\_duration) | Maximum session duration in seconds. | `number` | `3600` | no |
+| <a name="input_oidc_client_ids"></a> [oidc\_client\_ids](#input\_oidc\_client\_ids) | IDs of authenticated clients | `list(string)` | n/a | yes |
+| <a name="input_oidc_provider_url"></a> [oidc\_provider\_url](#input\_oidc\_provider\_url) | OIDC token provider url | `string` | n/a | yes |
+| <a name="input_policy_documents"></a> [policy\_documents](#input\_policy\_documents) | Conditions for authenticating to a role | <pre>map(object(<br>    {<br>      actions = optional(list(string), ["sts:AssumeRoleWithWebIdentity"])<br>      effect  = optional(string, "Allow")<br>      conditions = map(object(<br>        {<br>          values   = list(string)<br>          test     = string<br>          variable = string<br>        }<br>      ))<br>    }<br>  ))</pre> | n/a | yes |
+| <a name="input_roles"></a> [roles](#input\_roles) | Conditions for authenticating to a role | <pre>list(object(<br>    {<br>      name                      = string<br>      description               = string<br>      policy_document_reference = string<br>      force_detach_policies     = optional(bool, false)<br>      max_session_duration      = optional(number, 3600)<br>      path                      = string<br>      permissions_boundary      = string<br>      inline_policies = optional(list(object(<br>        {<br>          name  = string<br>          value = string<br>        }<br>      )), [])<br>      policy_arns = list(string)<br>    }<br>  ))</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to be applied to all resources. | `map(string)` | `{}` | no |
+| <a name="input_thumbprint_urls"></a> [thumbprint\_urls](#input\_thumbprint\_urls) | URLs for certificates (typically ends in .well-known/openid-configuration) | `list(string)` | n/a | yes |
 
 ## Outputs
 
