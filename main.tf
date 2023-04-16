@@ -24,7 +24,7 @@ resource "aws_iam_role_policy_attachment" "policies" {
   for_each = { for k in local.policy_attachments : "${k.role_name}-${k.policy_arn}" => k }
 
   policy_arn = each.value["policy_arn"]
-  role       = each.value["role"]
+  role       = aws_iam_role.roles[(each.value["role_name"])].id
 }
 
 resource "aws_iam_openid_connect_provider" "oidc_provider" {
