@@ -21,7 +21,7 @@ resource "aws_iam_role" "roles" {
 }
 
 resource "aws_iam_role_policy_attachment" "policies" {
-  for_each = { for k in local.policy_attachments : "${k.role}-${k.policy_arn}" => k }
+  for_each = { for k in local.policy_attachments : "${k.role_name}-${k.policy_arn}" => k }
 
   policy_arn = each.value["policy_arn"]
   role       = each.value["role"]
